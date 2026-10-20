@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>27SS 진행보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --k:#111111; --w:#ffffff; --b:#2F55D4; --o:#6B7238;
+  --k70:rgba(17,17,17,.7); --k45:rgba(17,17,17,.45); --k15:rgba(17,17,17,.15); --k06:rgba(17,17,17,.05);
+  --b10:rgba(47,85,212,.10); --o14:rgba(107,114,56,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--w)}
+body{color:var(--k);font-family:'Noto Sans KR',sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit;background:none;border:none;outline:none}
+button{cursor:pointer}
+.wrap{max-width:1320px;margin:0 auto;padding:0 24px}
+
+/* header */
+header{border-bottom:2px solid var(--k)}
+.hd{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:32px 0 22px;flex-wrap:wrap}
+.eyebrow{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;letter-spacing:.18em;color:var(--o)}
+h1{font-weight:900;font-size:40px;letter-spacing:-.03em;line-height:1.1;margin-top:6px}
+h1 em{font-style:normal;color:var(--b)}
+.hd-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.save{font-size:12px;color:var(--k45);display:flex;align-items:center;gap:6px;margin-right:6px}
+.save i{width:7px;height:7px;border-radius:50%;background:var(--o)}
+.save.saving i{background:var(--b)} .save.err{color:var(--k)} .save.err i{background:var(--k)}
+.btn{height:40px;padding:0 18px;border:1.5px solid var(--k);border-radius:4px;font-weight:700;font-size:13px;white-space:nowrap;transition:background .15s,color .15s}
+.btn:hover{background:var(--k);color:var(--w)}
+.btn.pri{background:var(--b);border-color:var(--b);color:var(--w)}
+.btn.pri:hover{background:var(--k);border-color:var(--k)}
+.btn.olv{background:var(--o);border-color:var(--o);color:var(--w);display:inline-flex;align-items:center;gap:6px}
+.btn.olv:hover{background:var(--k);border-color:var(--k)}
+.drop{position:fixed;inset:0;z-index:60;background:rgba(17,17,17,.6);display:none;align-items:center;justify-content:center;padding:24px;pointer-events:none}
+.drop.on{display:flex}
+.drop>div{border:3px dashed var(--w);border-radius:8px;width:100%;max-width:640px;padding:70px 20px;text-align:center;color:var(--w);display:flex;flex-direction:column;gap:6px}
+.drop b{font-size:22px;font-weight:900}
+.drop span{font-size:13px;opacity:.85}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--k);color:var(--w);padding:11px 18px;border-radius:4px;font-size:13px;font-weight:500;opacity:0;transition:all .2s;z-index:70;pointer-events:none;max-width:calc(100% - 32px)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.thumb{cursor:pointer}
+.thumb::after{content:'사진 변경';position:absolute;inset:auto 0 0 0;background:rgba(17,17,17,.75);color:var(--w);font-size:12px;font-weight:700;text-align:center;padding:7px 0;opacity:0;transition:opacity .15s;z-index:2}
+.thumb:hover::after{opacity:1}
+.thumb.noimg span{display:flex;flex-direction:column;align-items:center;gap:2px}
+.card.fresh{box-shadow:0 0 0 3px var(--o)}
+.name.need::placeholder{color:var(--b);font-weight:700}
+.upl{display:flex;gap:10px;align-items:center}
+.upl .pv{width:56px;height:70px;border-radius:3px;background:var(--k06) center/cover no-repeat;flex:none;border:1.5px solid var(--k15)}
+.upl .btn{height:34px;font-size:12px}
+.notice{background:var(--k);color:var(--w);font-size:12px;padding:8px 0;text-align:center}
+.notice b{color:#c9d3f5}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1.5px solid var(--k)}
+.stat{padding:18px 18px 16px;border-right:1px solid var(--k15);text-align:left;transition:background .15s}
+.stat:last-child{border-right:none}
+.stat:hover{background:var(--k06)}
+.stat.on{background:var(--k06);box-shadow:inset 0 -3px 0 var(--k)}
+.stat .n{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;line-height:1}
+.stat .l{font-size:12px;font-weight:700;color:var(--k70);margin-top:8px;display:flex;align-items:center;gap:6px}
+.stat .l i{width:8px;height:8px;border-radius:2px;background:var(--k15)}
+.stat.go .n{color:var(--b)} .stat.go .l i{background:var(--b)}
+.stat.hold .n{color:var(--o)} .stat.hold .l i{background:var(--o)}
+.stat.drop .l i{background:var(--k)}
+.stat.sep{border-left:1.5px solid var(--k)}
+
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;padding:18px 0;border-bottom:1px solid var(--k15)}
+.fgroup{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.flabel{font-size:11px;font-weight:700;color:var(--k45);letter-spacing:.06em;margin-right:4px}
+.fchip{height:30px;padding:0 12px;border:1.5px solid var(--k15);border-radius:99px;font-size:12px;font-weight:500}
+.fchip:hover{border-color:var(--k)}
+.fchip.on{background:var(--k);border-color:var(--k);color:var(--w)}
+.search{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;border:1.5px solid var(--k);border-radius:4px;height:38px;padding:0 12px}
+.search input{flex:1;min-width:0}
+.search svg{flex:none}
+select.sort{height:30px;border:1.5px solid var(--k15);border-radius:4px;padding:0 8px;font-size:12px}
+
+/* grid */
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:22px 0 60px}
+@media (max-width:1180px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:860px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.card{border:1.5px solid var(--k);border-radius:4px;background:var(--w);display:flex;flex-direction:column;overflow:hidden}
+.bar{height:6px;background:var(--k15)}
+.st-go .bar{background:var(--b)} .st-hold .bar{background:var(--o)} .st-drop .bar{background:var(--k)}
+.head{display:flex;flex-direction:column;gap:10px;padding:12px 12px 12px;border-bottom:1px solid var(--k15)}
+.htop{display:flex;gap:8px;align-items:flex-start}
+.thumb{width:100%;aspect-ratio:4/5;flex:none;border-radius:3px;background:var(--o14);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.thumb span{font-size:13px;font-weight:700;color:var(--o);text-align:center;line-height:1.4}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ttl{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.tags{display:flex;gap:4px;flex-wrap:wrap;min-height:0}
+.tag{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;padding:2px 6px;border-radius:2px}
+.tag.ref{background:var(--k);color:var(--w)}
+.tag.rgo{background:var(--b10);color:var(--b)}
+.tag.rhold{background:var(--o14);color:var(--o)}
+textarea.name{font-weight:700;font-size:15px;line-height:1.35;resize:none;width:100%;border-radius:2px;padding:2px 0}
+textarea.name:focus{box-shadow:0 2px 0 var(--b)}
+.lnk{font-size:12px;color:var(--b);text-decoration:none;font-weight:500;align-self:flex-start}
+.lnk:hover{text-decoration:underline}
+.del{width:26px;height:26px;flex:none;border-radius:50%;font-size:18px;line-height:1;color:var(--k45)}
+.del:hover{background:var(--k);color:var(--w)}
+.st-drop textarea.name{text-decoration:line-through;color:var(--k45)}
+.st-drop .thumb img{filter:grayscale(1);opacity:.6}
+
+.rows{padding:4px 12px 4px;display:flex;flex-direction:column}
+.row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--k15)}
+.row:last-child{border-bottom:none}
+.row.top{align-items:flex-start}
+.lb{width:50px;flex:none;font-size:11px;font-weight:700;color:var(--k45);padding-top:1px}
+.row.top .lb{padding-top:6px}
+.seg{display:flex;gap:6px}
+.sb,.tb{height:28px;min-width:46px;padding:0 10px;border:1.5px solid var(--k15);border-radius:4px;font-size:12px;font-weight:700;color:var(--k70);transition:all .12s}
+.sb:hover,.tb:hover{border-color:var(--k);color:var(--k)}
+.sb.on.s-go{background:var(--b);border-color:var(--b);color:var(--w)}
+.sb.on.s-hold{background:var(--o);border-color:var(--o);color:var(--w)}
+.sb.on.s-drop{background:var(--k);border-color:var(--k);color:var(--w)}
+.tb.on{background:var(--k);border-color:var(--k);color:var(--w)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.cb{height:26px;padding:0 9px;border:1.5px solid var(--k15);border-radius:99px;font-size:12px;color:var(--k70)}
+.cb:hover{border-color:var(--o);color:var(--o)}
+.cb.on{background:var(--o);border-color:var(--o);color:var(--w)}
+.row input,.row textarea{flex:1;min-width:0;padding:5px 0;border-bottom:1.5px solid transparent;font-size:13px}
+.row textarea{resize:vertical;line-height:1.5;min-height:58px;background:var(--k06);border-radius:3px;padding:6px 8px;border-bottom:none}
+.row input:hover{border-bottom-color:var(--k15)}
+.row input:focus{border-bottom-color:var(--b)}
+.row textarea:focus{box-shadow:inset 0 0 0 1.5px var(--b)}
+input::placeholder,textarea::placeholder{color:var(--k45)}
+.foot{margin-top:auto;padding:9px 12px;font-size:11px;color:var(--k45);border-top:1px solid var(--k15);font-family:'Space Grotesk','Noto Sans KR',sans-serif}
+
+.empty{grid-column:1/-1;border:1.5px dashed var(--k15);border-radius:4px;padding:60px 20px;text-align:center}
+.empty h3{font-size:18px;font-weight:900}
+.empty p{color:var(--k45);margin:6px 0 18px}
+.empty .btn{margin:0 4px}
+
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(17,17,17,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.ov.open{display:flex}
+.modal{background:var(--w);border:2px solid var(--k);border-radius:6px;width:100%;max-width:560px;max-height:90vh;display:flex;flex-direction:column}
+.modal.wide{max-width:960px}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1.5px solid var(--k)}
+.mh h2{font-size:18px;font-weight:900}
+.mb{padding:18px 20px;overflow:auto}
+.mf{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--k15);align-items:center}
+.mf .grow{flex:1;font-size:12px;color:var(--k45)}
+.fld{margin-bottom:14px}
+.fld>label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}
+.fld input,.fld textarea{width:100%;border:1.5px solid var(--k15);border-radius:4px;padding:9px 11px}
+.fld input:focus,.fld textarea:focus{border-color:var(--b)}
+.fld2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.req{color:var(--b)}
+
+.refbar{margin-bottom:14px}
+.rtabs{display:flex;gap:0;border-bottom:1.5px solid var(--k);margin-bottom:12px}
+.rtab{padding:9px 16px;font-size:13px;font-weight:700;color:var(--k45);border:1.5px solid transparent;border-bottom:none;border-radius:4px 4px 0 0;margin-bottom:-1.5px}
+.rtab:hover{color:var(--k)}
+.rtab.on{color:var(--k);border-color:var(--k);background:var(--w)}
+.rfil{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.rsep{width:1px;height:18px;background:var(--k15);margin:0 4px}
+.refgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.ri{border:1.5px solid var(--k15);border-radius:4px;overflow:hidden;cursor:pointer;position:relative;text-align:left;display:block;background:var(--w)}
+.ri:hover{border-color:var(--k)}
+.ri.sel{border-color:var(--b);box-shadow:0 0 0 2px var(--b)}
+.ri.done{opacity:.4;cursor:default}
+.ri .im{aspect-ratio:4/5;background:var(--k06);position:relative}
+.ri .im img{width:100%;height:100%;object-fit:cover;display:block}
+.ri .ck{position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:50%;border:2px solid var(--w);background:rgba(17,17,17,.3);display:flex;align-items:center;justify-content:center;color:var(--w);font-size:12px;font-weight:900}
+.ri.sel .ck{background:var(--b)}
+.ri .rs{position:absolute;top:8px;right:8px}
+.ri .tx{padding:8px 9px 10px}
+.ri .br{font-size:11px;font-weight:700;color:var(--k45)}
+.ri .tt{font-size:12px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ri .ct{font-size:11px;color:var(--o);font-weight:700;margin-top:4px}
+.msg{padding:40px 0;text-align:center;color:var(--k45)}
+
+@media (max-width:900px){
+  .stats{grid-template-columns:repeat(4,1fr)}
+  .stat:nth-child(4){border-right:none}
+  .stat.sep{border-left:none}
+  .stat:nth-child(n+5){border-top:1px solid var(--k15)}
+}
+@media (max-width:600px){
+  .wrap{padding:0 16px}
+  h1{font-size:30px}
+  .hd{padding:24px 0 18px}
+  .hd-r{width:100%}
+  .hd-r .btn{flex:1}
+  .save{width:100%}
+  .stat{padding:14px 12px}
+  .stat .n{font-size:26px}
+  .grid{grid-template-columns:1fr}
+  .fld2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="notice" id="notice" hidden>미리보기 모드 — 지금은 <b>이 브라우저에만</b> 저장돼요. 배포하면 팀 전체가 같은 내용을 보게 됩니다.</div>
+
+<header>
+  <div class="wrap hd">
+    <div>
+      <div class="eyebrow">SEASON 27 · SPRING / SUMMER</div>
+      <h1>27SS <em>진행보드</em></h1>
+    </div>
+    <div class="hd-r">
+      <span class="save" id="save"><i></i><span>불러오는 중…</span></span>
+      <button class="btn" id="openRef">레퍼런스 보드에서 가져오기</button>
+      <button class="btn pri" id="openNew">+ 새 아이템</button>
+      <button class="btn olv" id="openQuick" title="사진만 올리면 아이템이 바로 생성돼요"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>빠른등록</button>
+      <input type="file" id="quickInput" accept="image/*" multiple hidden>
+      <input type="file" id="photoInput" accept="image/*" hidden>
+    </div>
+  </div>
+</header>
+
+<div class="drop" id="drop"><div><b>여기에 사진을 놓으세요</b><span>사진 1장당 아이템 1개가 바로 만들어져요</span></div></div>
+<div class="toast" id="toast"></div>
+
+<div class="wrap">
+  <div class="stats" id="stats"></div>
+  <div class="filters" id="filters"></div>
+  <main class="grid" id="grid"></main>
+</div>
+
+<!-- new item modal -->
+<div class="ov" id="ovNew">
+  <form class="modal" id="formNew" autocomplete="off">
+    <div class="mh"><h2>새 아이템 등록</h2><button type="button" class="del" data-close>×</button></div>
+    <div class="mb">
+      <div class="fld"><label>제품명 <span class="req">*</span></label><input name="name" required placeholder="예: 린넨 오버핏 셔츠"></div>
+      <div class="fld2">
+        <div class="fld"><label>담당자</label><input name="owner" placeholder="이름"></div>
+        <div class="fld"><label>컬러</label><input name="color" placeholder="예: 아이보리, 네이비"></div>
+      </div>
+      <div class="fld"><label>구분</label><div class="seg" data-pick="type"></div></div>
+      <div class="fld"><label>카테고리 <span style="font-weight:400;color:var(--k45)">(중복 선택 가능)</span></label><div class="chips" data-pick="cats"></div></div>
+      <div class="fld"><label>사진 <span style="font-weight:400;color:var(--k45)">(선택 — 파일 업로드 또는 이미지 URL)</span></label>
+        <div class="upl"><div class="pv" id="newPv"></div><button type="button" class="btn" id="newPhotoBtn">사진 올리기</button><input name="image" placeholder="또는 이미지 URL https://..." style="flex:1"></div>
+        <input type="file" id="newPhoto" accept="image/*" hidden>
+      </div>
+      <div class="fld"><label>참고 링크 <span style="font-weight:400;color:var(--k45)">(선택)</span></label><input name="link" placeholder="https://..."></div>
+    </div>
+    <div class="mf"><button type="button" class="btn" data-close>취소</button><button class="btn pri">등록하기</button></div>
+  </form>
+</div>
+
+<!-- ref import modal -->
+<div class="ov" id="ovRef">
+  <div class="modal wide">
+    <div class="mh"><h2>레퍼런스에서 가져오기</h2><button type="button" class="del" data-close>×</button></div>
+    <div class="mb">
+      <div class="refbar" id="refbar"></div>
+      <div id="reflist"><div class="msg">불러오는 중…</div></div>
+    </div>
+    <div class="mf"><span class="grow" id="refInfo"></span><button class="btn" data-close>취소</button><button class="btn pri" id="refAdd" disabled>추가하기</button></div>
+  </div>
+</div>
+
+<script>
+/* ===== 설정 ===== */
+// Supabase 프로젝트 주소와 공개(publishable/anon) 키 — 비어 있으면 이 브라우저에만 저장되는 미리보기 모드
+const SB_URL = 'https://xelboshexpgsvhfgeghd.supabase.co';
+const SB_KEY = 'sb_publishable_StC2lo5fs-7I-68HgQQVUQ_pKMDj8fi'; // 공개용 키 (브라우저 노출 전제로 발급되는 키)
+const BUCKET = 'photos';
+const REF_SITE   = 'https://kyoeee.github.io/ref-board/';
+const REF_STATUS = 'https://api.jsonstorage.net/v1/json/c6048033-1c46-45a0-8eb6-7f866da9c917/78f8647f-dd33-4283-bf2b-9b4fb20ad7c3';
+
+const CATS   = ['아우터','상의','니트','셔츠','팬츠','스커트'];
+const STATUS = {go:'진행', hold:'보류', drop:'드랍'};
+const TYPES  = ['제작','사입'];
+const REF_CAT_MAP = {'티셔츠':'상의','탑':'상의','블라우스':'상의','긴팔셔츠':'셔츠','반팔셔츠':'셔츠','셔츠':'셔츠','스커트':'스커트','니트':'니트','팬츠':'팬츠','아우터':'아우터'};
+const LS_KEY = 'ss27-progress-board';
+const REMOTE = !!(SB_URL && SB_KEY);
+
+let state = {items:{}};
+const fresh = new Set();
+let refStatus = {};
+const ui = {q:'', status:'all', type:'all', cats:[], sort:'updated'};
+
+/* ===== utils ===== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const fmt = t => { if(!t) return '-'; const d = new Date(t); const p = n => String(n).padStart(2,'0'); return `${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+const cleanUrl = u => (u||'').trim();
+
+function setSave(s){
+  const el = $('#save'); el.className = 'save ' + (s==='saving'?'saving':s==='err'?'err':'');
+  el.querySelector('span').textContent = s==='saving' ? '저장 중…' : s==='err' ? '저장 실패 — 새로고침 해주세요' : s==='load' ? '불러오는 중…' : '저장됨';
+}
+
+/* ===== storage (Supabase: 아이템 1개 = 행 1개라 서로 다른 아이템을 동시에 고쳐도 덮어쓰지 않음) ===== */
+const sbH = (extra = {}) => ({apikey: SB_KEY, ...(SB_KEY.startsWith('sb_') ? {} : {Authorization: 'Bearer ' + SB_KEY}), ...extra});
+async function sbReq(path, opt = {}){
+  const r = await fetch(SB_URL + path, {...opt, headers: sbH(opt.headers || {}), cache: 'no-store'});
+  if(!r.ok) throw new Error(path.split('?')[0] + ' ' + r.status + ' ' + (await r.text()).slice(0, 200));
+  return r;
+}
+async function fetchStore(){
+  if(!REMOTE){
+    try{ const d = JSON.parse(localStorage.getItem(LS_KEY)); return d && d.items ? d : null; }catch(e){ return null; }
+  }
+  const rows = await (await sbReq('/rest/v1/items?select=id,data')).json();
+  const items = {};
+  rows.forEach(r => { items[r.id] = {...(r.data || {}), id: r.id}; });
+  return {items};
+}
+function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){ toast('브라우저 저장 공간이 부족해요 (미리보기 한정)'); } }
+
+let pending = 0, chain = Promise.resolve();
+function queue(remoteFn){
+  setSave('saving');
+  if(!REMOTE){ saveLocal(); setSave('ok'); return Promise.resolve(); }
+  pending++;
+  chain = chain.then(remoteFn).then(() => { if(--pending === 0) setSave('ok'); })
+    .catch(e => { pending--; console.error(e); setSave('err'); toast('저장에 실패했어요. 인터넷 연결을 확인하고 새로고침해 주세요.', 5000); });
+  return chain;
+}
+function addItems(list){
+  list.forEach(it => { state.items[it.id] = it; });
+  render();
+  return queue(() => sbReq('/rest/v1/items', {method:'POST',
+    headers:{'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal'},
+    body: JSON.stringify(list.map(it => ({id: it.id, data: it})))}));
+}
+function patch(id, p){
+  const it = state.items[id]; if(!it) return;
+  const change = {...p, updatedAt: Date.now()};
+  Object.assign(it, change); render();
+  return queue(() => sbReq('/rest/v1/rpc/patch_item', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({p_id: id, p_patch: change})}));
+}
+function removeItem(id){
+  const it = state.items[id]; if(!it) return;
+  delete state.items[id]; render();
+  const path = it.photoPath;
+  return queue(async () => {
+    await sbReq('/rest/v1/items?id=eq.' + encodeURIComponent(id), {method:'DELETE'});
+    if(path) deletePhoto(path);
+  });
+}
+
+/* ===== 사진 ===== */
+// 긴 변 1000px JPEG로 줄여 올림 (카드·확대 보기 모두 충분, 용량 절약)
+function resizeImage(file, max = 1000, q = 0.82){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.naturalWidth * s));
+      c.height = Math.max(1, Math.round(img.naturalHeight * s));
+      const x = c.getContext('2d');
+      x.fillStyle = '#ffffff'; x.fillRect(0, 0, c.width, c.height);
+      x.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => b ? res(b) : rej(new Error('encode')), 'image/jpeg', q);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('decode')); };
+    img.src = url;
+  });
+}
+const blobToDataUrl = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); });
+// 사진 파일 → {image, photoPath}. 미리보기 모드에선 data URL로 대신 저장
+async function uploadPhoto(file, id){
+  const blob = await resizeImage(file);
+  if(!REMOTE){ const small = await resizeImage(file, 480, 0.75); return {image: await blobToDataUrl(small), photoPath: ''}; }
+  const path = `${id}/${Date.now().toString(36)}.jpg`;
+  await sbReq(`/storage/v1/object/${BUCKET}/${path}`, {method:'POST', headers:{'Content-Type':'image/jpeg', 'x-upsert':'true', 'cache-control':'31536000'}, body: blob});
+  return {image: `${SB_URL}/storage/v1/object/public/${BUCKET}/${path}`, photoPath: path};
+}
+function deletePhoto(path){
+  if(!REMOTE || !path) return;
+  sbReq(`/storage/v1/object/${BUCKET}/${path}`, {method:'DELETE'}).catch(e => console.warn(e));
+}
+const imgOf = it => it.image || '';
+const HEIC_MSG = '(아이폰 HEIC 사진은 JPG로 바꿔 올려주세요)';
+
+/* 파일명이 의미 있는 이름이면 제품명으로 사용 (IMG_1234, 카톡 사진 등은 제외) */
+function nameFromFile(f){
+  const n = f.name.replace(/\.[^.]+$/, '').trim();
+  if(!n || /^(img|image|kakaotalk|screenshot|screen shot|스크린샷|photo|dsc|pxl|unnamed|download|\d)/i.test(n)) return '';
+  return n.replace(/[_]+/g, ' ');
+}
+
+let toastT;
+function toast(msg, ms = 2600){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms);
+}
+
+async function quickAdd(fileList){
+  const files = [...fileList].filter(f => f.type.startsWith('image/') || /\.(heic|heif)$/i.test(f.name));
+  if(!files.length){ toast('사진 파일만 올릴 수 있어요'); return; }
+  const now = Date.now(), newItems = [];
+  let fail = 0, done = 0;
+  toast(`사진 올리는 중… 0/${files.length}`, 120000);
+  // 3장씩 동시에 업로드
+  const work = files.map((f, n) => async () => {
+    const id = uid() + n;
+    try{
+      const ph = await uploadPhoto(f, id);
+      newItems.push({id, name:nameFromFile(f), ...ph, link:'', owner:'', color:'', type:'', cats:[], status:'', progress:'',
+        createdAt:now + n, updatedAt:now + n});
+    }catch(e){ console.error(e); fail++; }
+    toast(`사진 올리는 중… ${++done}/${files.length}`, 120000);
+  });
+  const runners = Array.from({length: Math.min(3, work.length)}, async () => { while(work.length) await work.shift()(); });
+  await Promise.all(runners);
+  if(newItems.length){
+    ui.status = 'all'; ui.type = 'all'; ui.cats = []; ui.q = ''; ui.sort = 'updated';
+    newItems.forEach(it => fresh.add(it.id));
+    setTimeout(() => { newItems.forEach(it => fresh.delete(it.id)); softRender(); }, 4000);
+    addItems(newItems);
+    window.scrollTo({top: $('#grid').offsetTop - 20, behavior:'smooth'});
+  }
+  toast(fail ? `${newItems.length}개 등록, ${fail}장은 올리지 못했어요 ${HEIC_MSG}` : `${newItems.length}개 아이템이 등록됐어요 — 제품명을 입력해 주세요`, 4500);
+}
+
+/* ===== render ===== */
+function editing(){ const a = document.activeElement; return a && $('#grid').contains(a) && /INPUT|TEXTAREA/.test(a.tagName); }
+function softRender(){ if(!editing()) render(); }
+
+function list(){ return Object.values(state.items).map(it => ({cats:[], ...it})); }
+
+function render(){ renderStats(); renderFilters(); renderGrid(); }
+
+function renderStats(){
+  const all = list();
+  const c = k => all.filter(i => (i.status||'none') === k).length;
+  const t = k => all.filter(i => i.type === k).length;
+  const cells = [
+    ['all','전체',all.length,''], ['go','진행',c('go'),'go'], ['hold','보류',c('hold'),'hold'], ['drop','드랍',c('drop'),'drop'], ['none','미정',c('none'),''],
+    ['t:제작','제작',t('제작'),'sep'], ['t:사입','사입',t('사입'),'']
+  ];
+  $('#stats').innerHTML = cells.map(([k,l,n,cls]) => {
+    const on = k.startsWith('t:') ? ui.type === k.slice(2) : ui.status === k && k !== 'all';
+    return `<button class="stat ${cls} ${on?'on':''}" data-k="${k}"><div class="n">${n}</div><div class="l"><i></i>${l}</div></button>`;
+  }).join('');
+}
+
+function renderFilters(){
+  const chip = (g,v,l,on) => `<button class="fchip ${on?'on':''}" data-g="${g}" data-v="${esc(v)}">${l}</button>`;
+  const focused = document.activeElement && document.activeElement.id === 'q';
+  if(focused) return;
+  $('#filters').innerHTML = `
+    <label class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" placeholder="제품명, 담당자, 컬러, 진행상황 검색" value="${esc(ui.q)}"></label>
+    <div class="fgroup"><span class="flabel">상태</span>${chip('status','all','전체',ui.status==='all')}${Object.entries(STATUS).map(([k,v])=>chip('status',k,v,ui.status===k)).join('')}${chip('status','none','미정',ui.status==='none')}</div>
+    <div class="fgroup"><span class="flabel">구분</span>${chip('type','all','전체',ui.type==='all')}${TYPES.map(t=>chip('type',t,t,ui.type===t)).join('')}</div>
+    <div class="fgroup"><span class="flabel">카테고리</span>${CATS.map(c=>chip('cat',c,c,ui.cats.includes(c))).join('')}</div>
+    <select class="sort" id="sort">
+      <option value="updated" ${ui.sort==='updated'?'selected':''}>최근 수정순</option>
+      <option value="created" ${ui.sort==='created'?'selected':''}>최근 등록순</option>
+      <option value="name" ${ui.sort==='name'?'selected':''}>이름순</option>
+      <option value="status" ${ui.sort==='status'?'selected':''}>상태순</option>
+    </select>`;
+}
+
+function filtered(){
+  const q = ui.q.trim().toLowerCase();
+  const order = {go:0, hold:1, none:2, drop:3};
+  return list().filter(i => {
+    if(ui.status !== 'all' && (i.status||'none') !== ui.status) return false;
+    if(ui.type !== 'all' && i.type !== ui.type) return false;
+    if(ui.cats.length && !ui.cats.some(c => i.cats.includes(c))) return false;
+    if(q && ![i.name,i.owner,i.color,i.progress].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b) => {
+    if(ui.sort === 'name') return (a.name||'').localeCompare(b.name||'', 'ko');
+    if(ui.sort === 'created') return (b.createdAt||0) - (a.createdAt||0);
+    if(ui.sort === 'status') return order[a.status||'none'] - order[b.status||'none'] || (b.updatedAt||0) - (a.updatedAt||0);
+    return (b.updatedAt||0) - (a.updatedAt||0);
+  });
+}
+
+function cardHTML(it){
+  const st = it.status || 'none';
+  const rs = it.refUrl ? refStatus[it.refUrl] : null;
+  const src = imgOf(it);
+  return `<article class="card st-${st} ${fresh.has(it.id)?'fresh':''}" data-id="${esc(it.id)}">
+    <div class="bar"></div>
+    <div class="head">
+      <div class="htop">
+        <div class="ttl">
+          ${(it.refUrl || rs) ? `<div class="tags">${it.refUrl?`<span class="tag ref">${it.refSrc==='lovlov'?'LOVLOV':'REF'}</span>`:''}${rs==='go'?'<span class="tag rgo">대표 진행</span>':rs==='hold'?'<span class="tag rhold">대표 보류</span>':''}</div>` : ''}
+          <textarea class="name ${it.name?'':'need'}" rows="2" data-f="name" placeholder="제품명을 입력하세요">${esc(it.name)}</textarea>
+          ${it.link ? `<a class="lnk" href="${esc(it.link)}" target="_blank" rel="noopener">링크 열기 ↗</a>` : ''}
+        </div>
+        <button class="del" data-act="del" title="삭제">×</button>
+      </div>
+      <div class="thumb ${src?'':'noimg'}" data-act="photo" title="사진 올리기/변경"><span>${src ? esc(it.cats[0] || '27SS') : '+<br>사진 올리기'}</span>${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</div>
+    </div>
+    <div class="rows">
+      <div class="row"><span class="lb">상태</span><div class="seg">${Object.entries(STATUS).map(([k,v]) => `<button class="sb s-${k} ${it.status===k?'on':''}" data-act="status" data-v="${k}">${v}</button>`).join('')}</div></div>
+      <div class="row"><span class="lb">구분</span><div class="seg">${TYPES.map(t => `<button class="tb ${it.type===t?'on':''}" data-act="type" data-v="${t}">${t}</button>`).join('')}</div></div>
+      <div class="row top"><span class="lb">카테고리</span><div class="chips">${CATS.map(c => `<button class="cb ${it.cats.includes(c)?'on':''}" data-act="cat" data-v="${c}">${c}</button>`).join('')}</div></div>
+      <div class="row"><span class="lb">담당자</span><input data-f="owner" value="${esc(it.owner)}" placeholder="이름 입력"></div>
+      <div class="row"><span class="lb">컬러</span><input data-f="color" value="${esc(it.color)}" placeholder="예: 아이보리, 네이비"></div>
+      <div class="row top"><span class="lb">진행상황</span><textarea data-f="progress" rows="3" placeholder="예: 10/24 샘플 의뢰, 원단 스와치 대기">${esc(it.progress)}</textarea></div>
+    </div>
+    <div class="foot">마지막 수정 ${fmt(it.updatedAt)}</div>
+  </article>`;
+}
+
+function renderGrid(){
+  const items = filtered();
+  const total = Object.keys(state.items).length;
+  if(!total){
+    $('#grid').innerHTML = `<div class="empty"><h3>아직 등록된 아이템이 없어요</h3><p>사진을 이 화면에 끌어다 놓거나, 아래 버튼으로 등록해 보세요.</p><button class="btn" data-open="ref">레퍼런스 보드에서 가져오기</button><button class="btn pri" data-open="new">+ 새 아이템</button><button class="btn olv" data-open="quick">빠른등록</button></div>`;
+    return;
+  }
+  $('#grid').innerHTML = items.length ? items.map(cardHTML).join('') : `<div class="empty"><h3>조건에 맞는 아이템이 없어요</h3><p>필터를 바꾸거나 검색어를 지워보세요.</p></div>`;
+}
+
+/* ===== events: stats / filters ===== */
+$('#stats').addEventListener('click', e => {
+  const b = e.target.closest('.stat'); if(!b) return;
+  const k = b.dataset.k;
+  if(k === 'all'){ ui.status = 'all'; ui.type = 'all'; ui.cats = []; ui.q = ''; }
+  else if(k.startsWith('t:')){ const t = k.slice(2); ui.type = ui.type === t ? 'all' : t; }
+  else ui.status = ui.status === k ? 'all' : k;
+  render();
+});
+$('#filters').addEventListener('click', e => {
+  const b = e.target.closest('.fchip'); if(!b) return;
+  const {g, v} = b.dataset;
+  if(g === 'cat') ui.cats = ui.cats.includes(v) ? ui.cats.filter(c => c !== v) : [...ui.cats, v];
+  else ui[g] = v;
+  render();
+});
+$('#filters').addEventListener('input', e => { if(e.target.id === 'q'){ ui.q = e.target.value; renderStats(); renderGrid(); } });
+$('#filters').addEventListener('change', e => { if(e.target.id === 'sort'){ ui.sort = e.target.value; renderGrid(); } });
+
+/* ===== events: cards ===== */
+$('#grid').addEventListener('click', e => {
+  const o = e.target.closest('[data-open]'); if(o){ const w = o.dataset.open; w === 'ref' ? openRef() : w === 'quick' ? $('#quickInput').click() : openNew(); return; }
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const id = b.closest('.card').dataset.id;
+  const it = state.items[id]; if(!it) return;
+  const v = b.dataset.v;
+  switch(b.dataset.act){
+    case 'photo': photoTarget = id; $('#photoInput').click(); break;
+    case 'status': patch(id, {status: it.status === v ? '' : v}); break;
+    case 'type':   patch(id, {type: it.type === v ? '' : v}); break;
+    case 'cat': {
+      const cats = it.cats || [];
+      const next = cats.includes(v) ? cats.filter(c => c !== v) : [...cats, v];
+      patch(id, {cats: next});
+      break;
+    }
+    case 'del':
+      if(confirm(`'${it.name || '이름 없음'}' 아이템을 삭제할까요?\n모든 사람의 화면에서 사라집니다.`)){
+        removeItem(id);
+      }
+      break;
+  }
+});
+const timers = {};
+function flushField(el){
+  const card = el.closest('.card'); if(!card) return;
+  const id = card.dataset.id, f = el.dataset.f, key = id + f;
+  clearTimeout(timers[key]); delete timers[key];
+  if(state.items[id] && (state.items[id][f] || '') !== el.value) patch(id, {[f]: el.value});
+}
+$('#grid').addEventListener('input', e => {
+  const el = e.target; if(!el.dataset.f) return;
+  const key = el.closest('.card').dataset.id + el.dataset.f;
+  clearTimeout(timers[key]);
+  setSave('saving');
+  timers[key] = setTimeout(() => flushField(el), 900);
+});
+$('#grid').addEventListener('focusout', e => { if(e.target.dataset && e.target.dataset.f) flushField(e.target); });
+
+/* ===== modals ===== */
+function openOv(id){ $(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeOv(ov){ ov.classList.remove('open'); document.body.style.overflow = ''; }
+document.querySelectorAll('.ov').forEach(ov => {
+  ov.addEventListener('click', e => { if(e.target === ov || e.target.closest('[data-close]')) closeOv(ov); });
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape') document.querySelectorAll('.ov.open').forEach(closeOv); });
+
+/* new item */
+const pick = {type:'', cats:[]};
+function renderPick(){
+  $('[data-pick="type"]').innerHTML = TYPES.map(t => `<button type="button" class="tb ${pick.type===t?'on':''}" data-v="${t}">${t}</button>`).join('');
+  $('[data-pick="cats"]').innerHTML = CATS.map(c => `<button type="button" class="cb ${pick.cats.includes(c)?'on':''}" data-v="${c}">${c}</button>`).join('');
+}
+$('[data-pick="type"]').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; pick.type = pick.type === b.dataset.v ? '' : b.dataset.v; renderPick(); });
+$('[data-pick="cats"]').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; const v = b.dataset.v; pick.cats = pick.cats.includes(v) ? pick.cats.filter(c => c !== v) : [...pick.cats, v]; renderPick(); });
+function setNewPv(){
+  if(pick.pv){ URL.revokeObjectURL(pick.pv); pick.pv = ''; }
+  if(pick.file) pick.pv = URL.createObjectURL(pick.file);
+  $('#newPv').style.backgroundImage = pick.pv ? `url("${pick.pv}")` : '';
+  $('#newPhotoBtn').textContent = pick.file ? '사진 바꾸기' : '사진 올리기';
+}
+$('#newPhotoBtn').addEventListener('click', () => $('#newPhoto').click());
+$('#newPhoto').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if(!f) return;
+  pick.file = f; setNewPv();
+});
+function openNew(){ $('#formNew').reset(); pick.type = ''; pick.cats = []; pick.file = null; setNewPv(); renderPick(); openOv('#ovNew'); setTimeout(() => $('#formNew [name=name]').focus(), 50); }
+$('#openNew').addEventListener('click', openNew);
+
+/* 빠른등록 */
+$('#openQuick').addEventListener('click', () => $('#quickInput').click());
+$('#quickInput').addEventListener('change', e => { const fs = [...e.target.files]; e.target.value = ''; if(fs.length) quickAdd(fs); });
+
+/* 카드 사진 변경 */
+let photoTarget = null;
+$('#photoInput').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  const id = photoTarget; photoTarget = null;
+  if(!f || !id || !state.items[id]) return;
+  try{
+    toast('사진 올리는 중…', 60000);
+    const old = state.items[id].photoPath;
+    const ph = await uploadPhoto(f, id);
+    if(!state.items[id]){ deletePhoto(ph.photoPath); return; }
+    patch(id, ph);
+    if(old && old !== ph.photoPath) deletePhoto(old);
+    toast('사진이 변경됐어요');
+  }catch(err){ console.error(err); toast('사진을 올리지 못했어요 ' + HEIC_MSG, 4000); }
+});
+
+/* 화면에 사진 끌어다 놓기 → 빠른등록 */
+let dragDepth = 0;
+const hasFiles = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+const modalOpen = () => !!document.querySelector('.ov.open');
+document.addEventListener('dragenter', e => { if(!hasFiles(e) || modalOpen()) return; e.preventDefault(); dragDepth++; $('#drop').classList.add('on'); });
+document.addEventListener('dragover', e => { if(!hasFiles(e) || modalOpen()) return; e.preventDefault(); });
+document.addEventListener('dragleave', e => { if(!hasFiles(e)) return; dragDepth = Math.max(0, dragDepth - 1); if(!dragDepth) $('#drop').classList.remove('on'); });
+document.addEventListener('drop', e => {
+  if(!hasFiles(e)) return;
+  e.preventDefault(); dragDepth = 0; $('#drop').classList.remove('on');
+  if(modalOpen()) return;
+  quickAdd(e.dataTransfer.files);
+});
+$('#formNew').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const now = Date.now(), id = uid();
+  const item = {id, name:f.get('name').trim(), owner:f.get('owner').trim(), color:f.get('color').trim(), image:cleanUrl(f.get('image')), link:cleanUrl(f.get('link')),
+    type:pick.type, cats:[...pick.cats], status:'', progress:'', createdAt:now, updatedAt:now};
+  if(!item.name) return;
+  const file = pick.file;
+  closeOv($('#ovNew'));
+  if(file){
+    toast('사진 올리는 중…', 60000);
+    try{ Object.assign(item, await uploadPhoto(file, id)); toast('등록됐어요'); }
+    catch(err){ console.error(err); toast('사진은 올리지 못했어요 ' + HEIC_MSG + ' — 아이템만 등록했어요', 4500); }
+  }
+  addItems([item]);
+});
+
+/* ref import — 여러 레퍼런스 사이트에서 가져오기 */
+const LOVLOV_SITE = 'https://lovlovseoul.github.io/lovlovsales/ref_summer.html';
+function mapCat(c){
+  c = String(c || '');
+  if(/티셔츠/.test(c)) return '상의';
+  if(/니트|가디건/.test(c)) return '니트';
+  if(/셔츠/.test(c)) return '셔츠';
+  if(/스커트/.test(c)) return '스커트';
+  if(/팬츠|반바지|슬랙스|데님|쇼츠/.test(c)) return '팬츠';
+  if(/자켓|재킷|코트|점퍼|아우터|베스트|블레이저/.test(c)) return '아우터';
+  if(/블라우스|티|탑|홀터|뷔스티에|상의|나시|슬리브리스/.test(c)) return '상의';
+  return REF_CAT_MAP[c] || '';
+}
+function scanArray(src, start){
+  let i = start, depth = 0, q = null;
+  for(; i < src.length; i++){
+    const c = src[i];
+    if(q){ if(c === '\\'){ i++; continue; } if(c === q) q = null; continue; }
+    if(c === '"' || c === "'" || c === '`'){ q = c; continue; }
+    if(c === '/' && src[i+1] === '/'){ i = src.indexOf('\n', i); if(i < 0) break; continue; }
+    if(c === '/' && src[i+1] === '*'){ i = src.indexOf('*/', i) + 1; continue; }
+    if(c === '[' || c === '{') depth++;
+    else if(c === ']' || c === '}'){ depth--; if(depth === 0) return src.slice(start, i + 1); }
+  }
+  throw new Error('parse failed');
+}
+function extractValue(src, name){
+  const re = new RegExp('(const|let|var)\\s+' + name + '\\s*=\\s*([\\[{])');
+  const m = re.exec(src);
+  if(!m) throw new Error(name + ' not found');
+  return (new Function('return ' + scanArray(src, m.index + m[0].length - 1)))();
+}
+const extractArray = extractValue;
+
+const REF_SOURCES = {
+  mine: {
+    label: '우리 레퍼런스 보드',
+    async load(){
+      const [html] = await Promise.all([fetch(REF_SITE + '?t=' + Date.now(), {cache:'no-store'}).then(r => r.text()), loadRefStatus()]);
+      return extractValue(html, 'boardData').map(d => ({
+        url: (d.url || '').split('?')[0], brand: d.brand || '', title: d.title || '', image: d.image || '',
+        category: d.category || '', plat: '', season: ''
+      })).filter(d => d.url);
+    }
+  },
+  lovlov: {
+    label: 'lovlov 시즌 레퍼런스',
+    async load(){
+      const html = await fetch(LOVLOV_SITE + '?t=' + Date.now(), {cache:'no-store'}).then(r => r.text());
+      const D = extractValue(html, 'D');
+      let IMG = {}; try{ IMG = extractValue(html, 'IMG'); }catch(e){}
+      const img = p => p.imgFull || (IMG[p.id] ? 'https://product-image.wconcept.co.kr/productimg/image/' + IMG[p.id] + '.jpg?RS=500' : '');
+      const href = p => p.url || (p.id ? 'https://www.wconcept.co.kr/Product/' + p.id : '');
+      return D.filter(p => p && p.name).map(p => ({
+        url: href(p).split('?')[0], brand: p.brand || '', title: p.name || '', image: img(p),
+        category: p.cat || '', plat: p.plat || 'W컨셉', season: p.season || 'SS'
+      })).filter(d => d.url);
+    }
+  }
+};
+const refCache = {};
+const rf = {src:'mine', sel:new Map(), onlyGo:false, cat:'all', plat:'all', season:'all'};
+
+async function loadRefStatus(){
+  try{ const r = await fetch(REF_STATUS + '?t=' + Date.now(), {cache:'no-store'}); if(r.ok) refStatus = (await r.json()) || {}; }catch(e){}
+}
+async function openRef(){
+  rf.sel = new Map(); openOv('#ovRef'); updateRefInfo();
+  await showSource(rf.src);
+}
+async function showSource(key){
+  rf.src = key; rf.cat = 'all'; rf.plat = 'all'; rf.season = 'all';
+  renderRefBar();
+  if(!refCache[key]){
+    $('#reflist').innerHTML = `<div class="msg">${esc(REF_SOURCES[key].label)} 불러오는 중…</div>`;
+    try{ refCache[key] = await REF_SOURCES[key].load(); }
+    catch(e){ console.error(e); $('#reflist').innerHTML = `<div class="msg">${esc(REF_SOURCES[key].label)}를 불러오지 못했어요.<br>사이트 구조가 바뀌었거나 일시적인 문제일 수 있어요.</div>`; return; }
+    if(rf.src !== key) return;
+    renderRefBar();
+  }
+  renderRef();
+}
+function renderRefBar(){
+  const data = refCache[rf.src] || [];
+  const ch = (attr, k, l, on) => `<button class="fchip ${on?'on':''}" data-${attr}="${esc(k)}">${esc(l)}</button>`;
+  const tabs = Object.entries(REF_SOURCES).map(([k, s]) => `<button class="rtab ${rf.src===k?'on':''}" data-src="${k}">${esc(s.label)}</button>`).join('');
+  let html = `<div class="rtabs">${tabs}</div><div class="rfil">`;
+  if(rf.src === 'mine') html += `<button class="fchip ${rf.onlyGo?'on':''}" data-rgo="1">대표님 '진행'만</button><span class="rsep"></span>`;
+  if(rf.src === 'lovlov' && data.length){
+    const plats = [...new Set(data.map(d => d.plat))], seasons = [...new Set(data.map(d => d.season))];
+    html += ch('rp','all','전체 몰',rf.plat==='all') + plats.map(p => ch('rp',p,p,rf.plat===p)).join('') + '<span class="rsep"></span>';
+    html += ch('rs','all','전체 시즌',rf.season==='all') + seasons.map(s => ch('rs',s,s,rf.season===s)).join('') + '<span class="rsep"></span>';
+  }
+  const cats = [...new Set(data.filter(d => (rf.plat==='all'||d.plat===rf.plat) && (rf.season==='all'||d.season===rf.season)).map(d => d.category).filter(Boolean))];
+  html += ch('rc','all','전체',rf.cat==='all') + cats.map(c => ch('rc',c,c,rf.cat===c)).join('') + '</div>';
+  $('#refbar').innerHTML = html;
+}
+function renderRef(){
+  const data = refCache[rf.src]; if(!data) return;
+  const imported = new Set(list().map(i => i.refUrl).filter(Boolean));
+  const rows = data.filter(d => (rf.cat === 'all' || d.category === rf.cat)
+    && (rf.plat === 'all' || d.plat === rf.plat) && (rf.season === 'all' || d.season === rf.season)
+    && (!(rf.src === 'mine' && rf.onlyGo) || refStatus[d.url] === 'go'));
+  $('#reflist').innerHTML = rows.length ? `<div class="refgrid">${rows.map(d => {
+    const done = imported.has(d.url), sel = rf.sel.has(d.url), rs = rf.src === 'mine' ? refStatus[d.url] : null;
+    return `<div class="ri ${done?'done':''} ${sel?'sel':''}" data-url="${esc(d.url)}">
+      <div class="im">${d.image ? `<img src="${esc(d.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}<span class="ck">${done || sel ? '✓' : ''}</span>
+      ${rs==='go'?'<span class="tag rs" style="background:var(--b);color:var(--w)">진행</span>':rs==='hold'?'<span class="tag rs" style="background:var(--o);color:var(--w)">보류</span>':''}</div>
+      <div class="tx"><div class="br">${esc(d.brand)}${d.plat ? ` · ${esc(d.plat)}` : ''}</div><div class="tt">${esc(d.title)}</div><div class="ct">${done ? '이미 추가됨' : esc(d.category)}</div></div>
+    </div>`; }).join('')}</div>` : '<div class="msg">해당하는 아이템이 없어요.</div>';
+}
+function updateRefInfo(){ $('#refInfo').textContent = rf.sel.size ? `${rf.sel.size}개 선택됨` : '추가할 아이템을 선택하세요'; $('#refAdd').disabled = !rf.sel.size; }
+$('#refbar').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  if(b.dataset.src){ if(b.dataset.src !== rf.src) showSource(b.dataset.src); return; }
+  if(b.dataset.rgo) rf.onlyGo = !rf.onlyGo;
+  else if(b.dataset.rp){ rf.plat = b.dataset.rp; rf.cat = 'all'; }
+  else if(b.dataset.rs){ rf.season = b.dataset.rs; rf.cat = 'all'; }
+  else if(b.dataset.rc) rf.cat = b.dataset.rc;
+  renderRefBar(); renderRef();
+});
+$('#reflist').addEventListener('click', e => {
+  const r = e.target.closest('.ri'); if(!r || r.classList.contains('done')) return;
+  const u = r.dataset.url;
+  if(rf.sel.has(u)) rf.sel.delete(u);
+  else rf.sel.set(u, {...(refCache[rf.src] || []).find(d => d.url === u), src: rf.src});
+  renderRef(); updateRefInfo();
+});
+$('#refAdd').addEventListener('click', () => {
+  const now = Date.now();
+  const add = [...rf.sel.values()].map((d, n) => {
+    const rs = d.src === 'mine' ? refStatus[d.url] : null;
+    const cat = mapCat(d.category);
+    return {id:uid() + n, name:[d.brand, d.title].filter(Boolean).join(' '), image:d.image || '', link:d.url, refUrl:d.url, refSrc:d.src,
+      status: rs === 'go' ? 'go' : rs === 'hold' ? 'hold' : '', type:'', cats: cat ? [cat] : [], owner:'', color:'', progress:'',
+      createdAt:now + n, updatedAt:now + n};
+  });
+  const have = new Set(list().map(i => i.refUrl).filter(Boolean));
+  const fresh2 = add.filter(it => !have.has(it.refUrl));
+  if(fresh2.length) addItems(fresh2);
+  closeOv($('#ovRef'));
+  toast(`${add.length}개 아이템을 가져왔어요`);
+});
+$('#openRef').addEventListener('click', openRef);
+
+/* ===== init ===== */
+function seed(){
+  const now = Date.now(), m = 60000;
+  const s = [
+    {name:'린넨 오버핏 셔츠', status:'go', owner:'수빈', type:'제작', cats:['셔츠'], color:'아이보리, 스카이블루', progress:'10/18 1차 샘플 완료 → 소매 길이 2cm 수정 요청'},
+    {name:'시어서커 플리츠 스커트', status:'hold', owner:'', type:'사입', cats:['스커트'], color:'네이비', progress:'단가 협의 중'},
+    {name:'코튼 크롭 가디건', status:'', owner:'', type:'', cats:['니트','상의'], color:'', progress:''}
+  ];
+  const items = {};
+  s.forEach((x, i) => { const id = 'sample' + i; items[id] = {id, image:'', link:'', createdAt:now - i*m, updatedAt:now - i*m*30, ...x}; });
+  return {items};
+}
+(async function init(){
+  setSave('load');
+  if(!REMOTE) $('#notice').hidden = false;
+  try{
+    const [d] = await Promise.all([fetchStore(), loadRefStatus()]);
+    state = d || (REMOTE ? {items:{}} : seed());
+    if(!d && !REMOTE) saveLocal();
+    setSave('ok');
+  }catch(e){ console.error(e); setSave('err'); toast('데이터를 불러오지 못했어요. 새로고침해 주세요.', 5000); }
+  render();
+  // 다른 사람이 바꾼 내용 15초마다 반영 (입력 중이거나 저장 중일 땐 건너뜀)
+  async function pull(){
+    if(pending || Object.keys(timers).length || editing()) return;
+    const d = await fetchStore(); if(!d || pending) return;
+    if(JSON.stringify(d.items) !== JSON.stringify(state.items)){ state = d; softRender(); }
+  }
+  setInterval(() => { if(!document.hidden && REMOTE) pull().catch(() => {}); }, 15000);
+  document.addEventListener('visibilitychange', () => { if(!document.hidden && REMOTE) pull().catch(() => {}); });
+})();
+</script>
+</body>
+</html>
