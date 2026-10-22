@@ -415,7 +415,7 @@ async function quickAdd(fileList){
   const runners = Array.from({length: Math.min(3, work.length)}, async () => { while(work.length) await work.shift()(); });
   await Promise.all(runners);
   if(newItems.length){
-    ui.status = 'all'; ui.type = 'all'; ui.cats = []; ui.q = ''; ui.sort = 'updated';
+    ui.status = 'all'; ui.type = 'all'; ui.cats = []; ui.q = ''; unfreeze();
     newItems.forEach(it => fresh.add(it.id));
     setTimeout(() => { newItems.forEach(it => fresh.delete(it.id)); softRender(); }, 4000);
     addItems(newItems);
@@ -509,8 +509,19 @@ function cardHTML(it){
   </article>`;
 }
 
+/* 카드 순서 고정: 버튼을 누르거나 내용을 고쳐도 카드가 제자리에 머물도록,
+   정렬·필터·검색을 바꾸거나 새로고침할 때만 순서를 다시 계산 */
+let frozenOrder = null;
+const unfreeze = () => { frozenOrder = null; };
 function renderGrid(){
-  const items = filtered();
+  let items = filtered();
+  if(frozenOrder){
+    const idx = new Map(frozenOrder.map((id, i) => [id, i]));
+    // 새로 생긴 아이템은 맨 앞, 나머지는 이전 순서 그대로
+    items = items.map((it, n) => ({it, k: idx.has(it.id) ? idx.get(it.id) : -1e9 + n}))
+                 .sort((a, b) => a.k - b.k).map(x => x.it);
+  }
+  frozenOrder = items.map(it => it.id);
   const total = Object.keys(state.items).length;
   if(!total){
     $('#grid').innerHTML = `<div class="empty"><h3>아직 등록된 아이템이 없어요</h3><p>사진을 이 화면에 끌어다 놓거나, 아래 버튼으로 등록해 보세요.</p><button class="btn" data-open="ref">레퍼런스 보드에서 가져오기</button><button class="btn pri" data-open="new">+ 새 아이템</button><button class="btn olv" data-open="quick">빠른등록</button></div>`;
@@ -526,17 +537,17 @@ $('#stats').addEventListener('click', e => {
   if(k === 'all'){ ui.status = 'all'; ui.type = 'all'; ui.cats = []; ui.q = ''; }
   else if(k.startsWith('t:')){ const t = k.slice(2); ui.type = ui.type === t ? 'all' : t; }
   else ui.status = ui.status === k ? 'all' : k;
-  render();
+  unfreeze(); render();
 });
 $('#filters').addEventListener('click', e => {
   const b = e.target.closest('.fchip'); if(!b) return;
   const {g, v} = b.dataset;
   if(g === 'cat') ui.cats = ui.cats.includes(v) ? ui.cats.filter(c => c !== v) : [...ui.cats, v];
   else ui[g] = v;
-  render();
+  unfreeze(); render();
 });
-$('#filters').addEventListener('input', e => { if(e.target.id === 'q'){ ui.q = e.target.value; renderStats(); renderGrid(); } });
-$('#filters').addEventListener('change', e => { if(e.target.id === 'sort'){ ui.sort = e.target.value; renderGrid(); } });
+$('#filters').addEventListener('input', e => { if(e.target.id === 'q'){ ui.q = e.target.value; unfreeze(); renderStats(); renderGrid(); } });
+$('#filters').addEventListener('change', e => { if(e.target.id === 'sort'){ ui.sort = e.target.value; unfreeze(); renderGrid(); } });
 
 /* ===== events: cards ===== */
 $('#grid').addEventListener('click', e => {
