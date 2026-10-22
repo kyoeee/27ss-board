@@ -271,7 +271,7 @@ const BUCKET = 'photos';
 const REF_SITE   = 'https://kyoeee.github.io/ref-board/';
 const REF_STATUS = 'https://api.jsonstorage.net/v1/json/c6048033-1c46-45a0-8eb6-7f866da9c917/78f8647f-dd33-4283-bf2b-9b4fb20ad7c3';
 
-const CATS   = ['아우터','상의','니트','셔츠','팬츠','스커트'];
+const CATS   = ['아우터','상의','니트','셔츠','팬츠','스커트','원피스'];
 const STATUS = {go:'진행', hold:'보류', drop:'드랍'};
 const TYPES  = ['제작','사입'];
 const REF_CAT_MAP = {'티셔츠':'상의','탑':'상의','블라우스':'상의','긴팔셔츠':'셔츠','반팔셔츠':'셔츠','셔츠':'셔츠','스커트':'스커트','니트':'니트','팬츠':'팬츠','아우터':'아우터'};
@@ -674,6 +674,7 @@ $('#formNew').addEventListener('submit', async e => {
 const LOVLOV_SITE = 'https://lovlovseoul.github.io/lovlovsales/ref_summer.html';
 function mapCat(c){
   c = String(c || '');
+  if(/원피스|드레스/.test(c)) return '원피스';
   if(/티셔츠/.test(c)) return '상의';
   if(/니트|가디건/.test(c)) return '니트';
   if(/셔츠/.test(c)) return '셔츠';
