@@ -178,6 +178,59 @@ input::placeholder,textarea::placeholder{color:var(--k45)}
 .ri .ct{font-size:11px;color:var(--o);font-weight:700;margin-top:4px}
 .msg{padding:40px 0;text-align:center;color:var(--k45)}
 
+/* 보기 전환 (자세히보기 / 간략히보기) */
+.viewtog{display:inline-flex;border:1.5px solid var(--k);border-radius:4px;overflow:hidden;height:30px}
+.viewtog button{padding:0 12px;font-size:12px;font-weight:700;color:var(--k70)}
+.viewtog button+button{border-left:1.5px solid var(--k)}
+.viewtog button.on{background:var(--k);color:var(--w)}
+.viewtog button:not(.on):hover{background:var(--k06)}
+
+/* 간략히보기 카드 */
+.grid.brief{grid-template-columns:repeat(7,minmax(0,1fr));gap:12px}
+.bcard{border:1.5px solid var(--k);border-radius:4px;background:var(--w);overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:transform .12s,box-shadow .12s}
+.bcard:hover,.bcard:focus-visible{transform:translateY(-2px);box-shadow:0 4px 0 var(--k);outline:none}
+.bcard .bname{padding:8px 9px 0;font-size:12.5px;font-weight:700;line-height:1.35;min-height:calc(1.35em * 2 + 8px);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all;overflow-wrap:anywhere}
+.bcard .bname.none{color:var(--b)}
+.bcard .bthumb{aspect-ratio:4/5;margin:8px 9px 0;border-radius:3px;background:var(--o14);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--o);font-size:11px;font-weight:700}
+.bcard .bthumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.bcard .bfoot{padding:8px 9px 9px}
+.pill{height:22px;padding:0 10px;border-radius:99px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;border:1.5px solid var(--k15);color:var(--k45)}
+.pill.s-go{background:var(--b);border-color:var(--b);color:var(--w)}
+.pill.s-hold{background:var(--o);border-color:var(--o);color:var(--w)}
+.pill.s-drop{background:var(--k);border-color:var(--k);color:var(--w)}
+.bcard.st-drop .bname{text-decoration:line-through;color:var(--k45)}
+.bcard.st-drop .bthumb img{filter:grayscale(1);opacity:.6}
+.bcard.fresh{box-shadow:0 0 0 3px var(--o)}
+
+/* 아이템 상세 창 */
+.cardm{background:var(--w);border:2px solid var(--k);border-radius:6px;width:100%;max-width:460px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+.cmh{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1.5px solid var(--k)}
+.cmh .pos{flex:1;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:var(--k45);padding-left:4px}
+.navb{width:32px;height:32px;border:1.5px solid var(--k15);border-radius:4px;font-size:17px;line-height:1;font-weight:700}
+.navb:hover:not(:disabled){border-color:var(--k)}
+.navb:disabled{opacity:.3;cursor:default}
+#cmBody{overflow:auto}
+#cmBody .card{border:none;border-radius:0}
+#cmBody .thumb{aspect-ratio:auto;height:min(46vh,420px)}
+#cmBody .thumb img{object-fit:contain;background:var(--k06)}
+#cmBody textarea[data-f="progress"]{min-height:130px}
+#cmBody .card .del{width:auto;height:28px;padding:0 10px;border:1.5px solid var(--k15);border-radius:4px;font-size:0}
+#cmBody .card .del::after{content:'삭제';font-size:12px;font-weight:700}
+#cmBody .card .del:hover{border-color:var(--k)}
+@media (min-width:760px){
+  .cardm{max-width:860px}
+  #cmBody .card{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);grid-template-areas:"bar bar" "head rows" "head foot"}
+  #cmBody .bar{grid-area:bar}
+  #cmBody .head{grid-area:head;border-bottom:none;border-right:1px solid var(--k15);padding:14px}
+  #cmBody .rows{grid-area:rows;padding:10px 16px}
+  #cmBody .foot{grid-area:foot;border-top:1px solid var(--k15)}
+  #cmBody .thumb{aspect-ratio:4/5;height:auto}
+  #cmBody .thumb img{object-fit:cover}
+  #cmBody textarea.name{font-size:17px}
+}
+
+@media (max-width:1180px){ .grid.brief{grid-template-columns:repeat(5,minmax(0,1fr))} }
+@media (max-width:860px){ .grid.brief{grid-template-columns:repeat(3,minmax(0,1fr))} }
 @media (max-width:900px){
   .stats{grid-template-columns:repeat(4,1fr)}
   .stat:nth-child(4){border-right:none}
@@ -194,6 +247,7 @@ input::placeholder,textarea::placeholder{color:var(--k45)}
   .stat{padding:14px 12px}
   .stat .n{font-size:26px}
   .grid{grid-template-columns:1fr}
+  .grid.brief{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .fld2{grid-template-columns:1fr}
 }
 </style>
@@ -250,6 +304,19 @@ input::placeholder,textarea::placeholder{color:var(--k45)}
   </form>
 </div>
 
+<!-- item detail modal (간략히보기에서 카드를 누르면 열림) -->
+<div class="ov" id="ovCard">
+  <div class="cardm" role="dialog" aria-label="아이템 상세">
+    <div class="cmh">
+      <button type="button" class="navb" data-nav="-1" title="이전 아이템 (←)">‹</button>
+      <button type="button" class="navb" data-nav="1" title="다음 아이템 (→)">›</button>
+      <span class="pos" id="cmPos"></span>
+      <button type="button" class="del" data-close title="닫기">×</button>
+    </div>
+    <div id="cmBody"></div>
+  </div>
+</div>
+
 <!-- ref import modal -->
 <div class="ov" id="ovRef">
   <div class="modal wide">
@@ -281,7 +348,8 @@ const REMOTE = !!(SB_URL && SB_KEY);
 let state = {items:{}};
 const fresh = new Set();
 let refStatus = {};
-const ui = {q:'', status:'all', type:'all', cats:[], sort:'updated'};
+const ui = {q:'', status:'all', type:'all', cats:[], sort:'updated', view:'detail'};
+try{ if(localStorage.getItem('ss27-view') === 'brief') ui.view = 'brief'; }catch(e){}
 
 /* ===== utils ===== */
 const $ = s => document.querySelector(s);
@@ -332,7 +400,7 @@ function addItems(list){
 function patch(id, p){
   const it = state.items[id]; if(!it) return;
   const change = {...p, updatedAt: Date.now()};
-  Object.assign(it, change); render();
+  Object.assign(it, change); softRender();
   return queue(() => sbReq('/rest/v1/rpc/patch_item', {method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({p_id: id, p_patch: change})}));
 }
@@ -425,7 +493,7 @@ async function quickAdd(fileList){
 }
 
 /* ===== render ===== */
-function editing(){ const a = document.activeElement; return a && $('#grid').contains(a) && /INPUT|TEXTAREA/.test(a.tagName); }
+function editing(){ const a = document.activeElement; return !!a && /INPUT|TEXTAREA/.test(a.tagName) && ($('#grid').contains(a) || $('#cmBody').contains(a)); }
 function softRender(){ if(!editing()) render(); }
 
 function list(){ return Object.values(state.items).map(it => ({cats:[], ...it})); }
@@ -460,7 +528,10 @@ function renderFilters(){
       <option value="created" ${ui.sort==='created'?'selected':''}>최근 등록순</option>
       <option value="name" ${ui.sort==='name'?'selected':''}>이름순</option>
       <option value="status" ${ui.sort==='status'?'selected':''}>상태순</option>
-    </select>`;
+    </select>
+    <div class="viewtog" role="group" aria-label="보기 방식">
+      <button type="button" data-view="detail" class="${ui.view==='detail'?'on':''}">자세히보기</button><button type="button" data-view="brief" class="${ui.view==='brief'?'on':''}">간략히보기</button>
+    </div>`;
 }
 
 function filtered(){
@@ -509,6 +580,41 @@ function cardHTML(it){
   </article>`;
 }
 
+/* 간략히보기 카드: 제품명 · 사진 · 진행상태만 */
+function briefHTML(it){
+  const st = it.status || 'none';
+  const src = imgOf(it);
+  return `<article class="bcard st-${st} ${fresh.has(it.id)?'fresh':''}" data-id="${esc(it.id)}" tabindex="0" title="눌러서 자세히 보기">
+    <div class="bar"></div>
+    <div class="bname ${it.name?'':'none'}">${esc(it.name || '제품명 없음')}</div>
+    <div class="bthumb">${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : '사진 없음'}</div>
+    <div class="bfoot"><span class="pill s-${st}">${STATUS[it.status] || '미정'}</span></div>
+  </article>`;
+}
+
+/* 아이템 상세 창 */
+let openId = null;
+function openCard(id){ if(!state.items[id]) return; openId = id; renderCardModal(true); openOv('#ovCard'); }
+function renderCardModal(force){
+  if(!openId) return;
+  const it = state.items[openId];
+  if(!it){ openId = null; closeOv($('#ovCard')); return; }
+  const order = frozenOrder || [], i = order.indexOf(openId);
+  $('#cmPos').textContent = i >= 0 ? `${i + 1} / ${order.length}` : '';
+  document.querySelectorAll('#ovCard [data-nav]').forEach(b => {
+    const j = i + Number(b.dataset.nav);
+    b.disabled = i < 0 || j < 0 || j >= order.length;
+  });
+  if(!force && $('#cmBody').contains(document.activeElement) && /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  $('#cmBody').innerHTML = cardHTML({cats:[], ...it});
+}
+function navCard(step){
+  const order = frozenOrder || [], i = order.indexOf(openId), j = i + step;
+  if(i < 0 || j < 0 || j >= order.length) return;
+  if(editing()) document.activeElement.blur();
+  openId = order[j]; renderCardModal(true); $('#cmBody').scrollTop = 0;
+}
+
 /* 카드 순서 고정: 버튼을 누르거나 내용을 고쳐도 카드가 제자리에 머물도록,
    정렬·필터·검색을 바꾸거나 새로고침할 때만 순서를 다시 계산 */
 let frozenOrder = null;
@@ -522,12 +628,14 @@ function renderGrid(){
                  .sort((a, b) => a.k - b.k).map(x => x.it);
   }
   frozenOrder = items.map(it => it.id);
+  $('#grid').classList.toggle('brief', ui.view === 'brief');
+  renderCardModal();
   const total = Object.keys(state.items).length;
   if(!total){
     $('#grid').innerHTML = `<div class="empty"><h3>아직 등록된 아이템이 없어요</h3><p>사진을 이 화면에 끌어다 놓거나, 아래 버튼으로 등록해 보세요.</p><button class="btn" data-open="ref">레퍼런스 보드에서 가져오기</button><button class="btn pri" data-open="new">+ 새 아이템</button><button class="btn olv" data-open="quick">빠른등록</button></div>`;
     return;
   }
-  $('#grid').innerHTML = items.length ? items.map(cardHTML).join('') : `<div class="empty"><h3>조건에 맞는 아이템이 없어요</h3><p>필터를 바꾸거나 검색어를 지워보세요.</p></div>`;
+  $('#grid').innerHTML = items.length ? items.map(ui.view === 'brief' ? briefHTML : cardHTML).join('') : `<div class="empty"><h3>조건에 맞는 아이템이 없어요</h3><p>필터를 바꾸거나 검색어를 지워보세요.</p></div>`;
 }
 
 /* ===== events: stats / filters ===== */
@@ -540,6 +648,15 @@ $('#stats').addEventListener('click', e => {
   unfreeze(); render();
 });
 $('#filters').addEventListener('click', e => {
+  const vb = e.target.closest('[data-view]');
+  if(vb){
+    if(ui.view !== vb.dataset.view){
+      ui.view = vb.dataset.view;
+      try{ localStorage.setItem('ss27-view', ui.view); }catch(err){}
+      renderFilters(); renderGrid();
+    }
+    return;
+  }
   const b = e.target.closest('.fchip'); if(!b) return;
   const {g, v} = b.dataset;
   if(g === 'cat') ui.cats = ui.cats.includes(v) ? ui.cats.filter(c => c !== v) : [...ui.cats, v];
@@ -552,6 +669,16 @@ $('#filters').addEventListener('change', e => { if(e.target.id === 'sort'){ ui.s
 /* ===== events: cards ===== */
 $('#grid').addEventListener('click', e => {
   const o = e.target.closest('[data-open]'); if(o){ const w = o.dataset.open; w === 'ref' ? openRef() : w === 'quick' ? $('#quickInput').click() : openNew(); return; }
+  const bc = e.target.closest('.bcard'); if(bc){ openCard(bc.dataset.id); return; }
+  cardAction(e);
+});
+$('#grid').addEventListener('keydown', e => {
+  const bc = e.target.closest('.bcard');
+  if(bc && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openCard(bc.dataset.id); }
+});
+$('#cmBody').addEventListener('click', cardAction);
+document.querySelectorAll('#ovCard [data-nav]').forEach(b => b.addEventListener('click', () => navCard(Number(b.dataset.nav))));
+function cardAction(e){
   const b = e.target.closest('[data-act]'); if(!b) return;
   const id = b.closest('.card').dataset.id;
   const it = state.items[id]; if(!it) return;
@@ -572,7 +699,7 @@ $('#grid').addEventListener('click', e => {
       }
       break;
   }
-});
+}
 const timers = {};
 function flushField(el){
   const card = el.closest('.card'); if(!card) return;
@@ -580,22 +707,32 @@ function flushField(el){
   clearTimeout(timers[key]); delete timers[key];
   if(state.items[id] && (state.items[id][f] || '') !== el.value) patch(id, {[f]: el.value});
 }
-$('#grid').addEventListener('input', e => {
-  const el = e.target; if(!el.dataset.f) return;
-  const key = el.closest('.card').dataset.id + el.dataset.f;
-  clearTimeout(timers[key]);
-  setSave('saving');
-  timers[key] = setTimeout(() => flushField(el), 900);
+['#grid', '#cmBody'].forEach(sel => {
+  $(sel).addEventListener('input', e => {
+    const el = e.target; if(!el.dataset.f) return;
+    const key = el.closest('.card').dataset.id + el.dataset.f;
+    clearTimeout(timers[key]);
+    setSave('saving');
+    timers[key] = setTimeout(() => flushField(el), 900);
+  });
+  $(sel).addEventListener('focusout', e => {
+    if(e.target.dataset && e.target.dataset.f){ flushField(e.target); setTimeout(softRender, 0); }
+  });
 });
-$('#grid').addEventListener('focusout', e => { if(e.target.dataset && e.target.dataset.f) flushField(e.target); });
 
 /* ===== modals ===== */
 function openOv(id){ $(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
-function closeOv(ov){ ov.classList.remove('open'); document.body.style.overflow = ''; }
+function closeOv(ov){
+  if(ov.id === 'ovCard'){ if(editing()) document.activeElement.blur(); openId = null; }
+  ov.classList.remove('open'); document.body.style.overflow = '';
+}
 document.querySelectorAll('.ov').forEach(ov => {
   ov.addEventListener('click', e => { if(e.target === ov || e.target.closest('[data-close]')) closeOv(ov); });
 });
-document.addEventListener('keydown', e => { if(e.key === 'Escape') document.querySelectorAll('.ov.open').forEach(closeOv); });
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') document.querySelectorAll('.ov.open').forEach(closeOv);
+  else if(openId && !editing() && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')){ e.preventDefault(); navCard(e.key === 'ArrowLeft' ? -1 : 1); }
+});
 
 /* new item */
 const pick = {type:'', cats:[]};
