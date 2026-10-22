@@ -348,7 +348,7 @@ const REMOTE = !!(SB_URL && SB_KEY);
 let state = {items:{}};
 const fresh = new Set();
 let refStatus = {};
-const ui = {q:'', status:'all', type:'all', cats:[], sort:'updated', view:'detail'};
+const ui = {q:'', status:'all', type:'all', cats:[], sort:'created', view:'detail'};
 try{ if(localStorage.getItem('ss27-view') === 'brief') ui.view = 'brief'; }catch(e){}
 
 /* ===== utils ===== */
@@ -524,8 +524,8 @@ function renderFilters(){
     <div class="fgroup"><span class="flabel">구분</span>${chip('type','all','전체',ui.type==='all')}${TYPES.map(t=>chip('type',t,t,ui.type===t)).join('')}</div>
     <div class="fgroup"><span class="flabel">카테고리</span>${CATS.map(c=>chip('cat',c,c,ui.cats.includes(c))).join('')}</div>
     <select class="sort" id="sort">
-      <option value="updated" ${ui.sort==='updated'?'selected':''}>최근 수정순</option>
       <option value="created" ${ui.sort==='created'?'selected':''}>최근 등록순</option>
+      <option value="updated" ${ui.sort==='updated'?'selected':''}>최근 수정순</option>
       <option value="name" ${ui.sort==='name'?'selected':''}>이름순</option>
       <option value="status" ${ui.sort==='status'?'selected':''}>상태순</option>
     </select>
