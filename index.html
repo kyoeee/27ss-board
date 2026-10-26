@@ -46,6 +46,10 @@ h1 em{font-style:normal;color:var(--b)}
 .thumb{cursor:pointer}
 .thumb::after{content:'사진 변경';position:absolute;inset:auto 0 0 0;background:rgba(17,17,17,.75);color:var(--w);font-size:12px;font-weight:700;text-align:center;padding:7px 0;opacity:0;transition:opacity .15s;z-index:2}
 .thumb:hover::after{opacity:1}
+.dlb{position:absolute;top:8px;right:8px;z-index:3;height:26px;padding:0 9px;border-radius:4px;background:var(--w);border:1.5px solid var(--k);font-size:11px;font-weight:700;color:var(--k);opacity:0;transition:opacity .15s}
+.thumb:hover .dlb,.dlb:focus-visible,#cmBody .dlb{opacity:1}
+.dlb:hover{background:var(--k);color:var(--w)}
+@media (hover:none){ .dlb{opacity:1} }
 .thumb.noimg span{display:flex;flex-direction:column;align-items:center;gap:2px}
 .card.fresh{box-shadow:0 0 0 3px var(--o)}
 .name.need::placeholder{color:var(--b);font-weight:700}
@@ -449,6 +453,28 @@ function deletePhoto(path){
   sbReq(`/storage/v1/object/${BUCKET}/${path}`, {method:'DELETE'}).catch(e => console.warn(e));
 }
 const imgOf = it => it.image || '';
+/* 썸네일 사진 저장: 제품명을 파일 이름으로 다운로드. 바로 저장이 안 되는 사진은 새 탭으로 열어줌 */
+async function downloadPhoto(it){
+  const src = imgOf(it); if(!src) return;
+  const base = (it.name || '27SS_아이템').replace(/[\\/:*?"<>|\n\r]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || '27SS_아이템';
+  try{
+    toast('사진 저장 중…', 15000);
+    const r = await fetch(src, {mode: 'cors', cache: 'no-store'});
+    if(!r.ok) throw new Error('status ' + r.status);
+    const blob = await r.blob();
+    const ext = ({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'})[blob.type] || 'jpg';
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = base + '.' + ext;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    toast('사진을 저장했어요');
+  }catch(e){
+    console.warn(e);
+    window.open(src, '_blank', 'noopener');
+    toast('이 사진은 바로 저장이 안 돼서 새 탭으로 열었어요. 사진을 우클릭해 저장해 주세요', 5000);
+  }
+}
 const HEIC_MSG = '(아이폰 HEIC 사진은 JPG로 바꿔 올려주세요)';
 
 /* 파일명이 의미 있는 이름이면 제품명으로 사용 (IMG_1234, 카톡 사진 등은 제외) */
@@ -566,7 +592,7 @@ function cardHTML(it){
         </div>
         <button class="del" data-act="del" title="삭제">×</button>
       </div>
-      <div class="thumb ${src?'':'noimg'}" data-act="photo" title="사진 올리기/변경"><span>${src ? esc(it.cats[0] || '27SS') : '+<br>사진 올리기'}</span>${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</div>
+      <div class="thumb ${src?'':'noimg'}" data-act="photo" title="사진 올리기/변경"><span>${src ? esc(it.cats[0] || '27SS') : '+<br>사진 올리기'}</span>${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ''}${src ? '<button type="button" class="dlb" data-act="dl" title="사진 저장">↓ 사진 저장</button>' : ''}</div>
     </div>
     <div class="rows">
       <div class="row"><span class="lb">상태</span><div class="seg">${Object.entries(STATUS).map(([k,v]) => `<button class="sb s-${k} ${it.status===k?'on':''}" data-act="status" data-v="${k}">${v}</button>`).join('')}</div></div>
@@ -685,6 +711,7 @@ function cardAction(e){
   const v = b.dataset.v;
   switch(b.dataset.act){
     case 'photo': photoTarget = id; $('#photoInput').click(); break;
+    case 'dl': downloadPhoto(it); break;
     case 'status': patch(id, {status: it.status === v ? '' : v}); break;
     case 'type':   patch(id, {type: it.type === v ? '' : v}); break;
     case 'cat': {
