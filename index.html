@@ -704,6 +704,7 @@ function renderFilters(){
       <option value="updated" ${ui.sort==='updated'?'selected':''}>최근 수정순</option>
       <option value="name" ${ui.sort==='name'?'selected':''}>이름순</option>
       <option value="status" ${ui.sort==='status'?'selected':''}>상태순</option>
+      ${BOARD === 'sample' ? `<option value="category" ${ui.sort==='category'?'selected':''}>아이템순</option>` : ''}
     </select>
     ${BOARD === 'sample' ? '' : `<div class="viewtog" role="group" aria-label="보기 방식">
       <button type="button" data-view="detail" class="${ui.view==='detail'?'on':''}">자세히보기</button><button type="button" data-view="brief" class="${ui.view==='brief'?'on':''}">간략히보기</button>
@@ -711,6 +712,7 @@ function renderFilters(){
     <button type="button" class="lbstart" data-lbstart title="지금 보이는 순서대로 사진만 크게 넘겨보기">⛶ 사진 크게보기</button>`;
 }
 
+const catRank = it => { const ix = (it.cats || []).map(c => CATS.indexOf(c)).filter(x => x >= 0); return ix.length ? Math.min(...ix) : CATS.length; };
 function filtered(){
   const q = ui.q.trim().toLowerCase();
   const order = {go:0, hold:1, none:2, drop:3};
@@ -722,6 +724,8 @@ function filtered(){
     return true;
   }).sort((a,b) => {
     if(ui.sort === 'name') return (a.name||'').localeCompare(b.name||'', 'ko');
+    // 아이템순(샘플보드): 아우터→상의→니트→셔츠→팬츠→스커트→원피스, 카테고리 여러 개면 가장 앞 순서 기준, 없으면 맨 뒤
+    if(ui.sort === 'category') return catRank(a) - catRank(b) || (b.createdAt||0) - (a.createdAt||0);
     if(ui.sort === 'created') return (b.createdAt||0) - (a.createdAt||0);
     if(ui.sort === 'status') return order[a.status||'none'] - order[b.status||'none'] || (b.updatedAt||0) - (a.updatedAt||0);
     return (b.updatedAt||0) - (a.updatedAt||0);
