@@ -227,6 +227,22 @@ input::placeholder,textarea::placeholder{color:var(--k45)}
 .bcard .bthumb{aspect-ratio:4/5;margin:8px 9px 0;border-radius:3px;background:var(--o14);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--o);font-size:11px;font-weight:700}
 .bcard .bthumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .bcard .bfoot{padding:8px 9px 9px}
+
+/* 레퍼런스 / 샘플보드 전환 */
+.titlerow{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px}
+.titlerow h1{margin-top:0}
+.boardtab{display:inline-flex;border:2px solid var(--k);border-radius:6px;overflow:hidden;height:38px}
+.boardtab a{display:flex;align-items:center;padding:0 16px;font-size:14px;font-weight:700;color:var(--k);text-decoration:none;white-space:nowrap}
+.boardtab a+a{border-left:2px solid var(--k)}
+.boardtab a.on{background:var(--k);color:var(--w)}
+.boardtab a:not(.on):hover{background:var(--k06)}
+
+/* 샘플보드 카드: 제품명 · 사진 · 담당자 */
+.scard .sowner{display:flex;align-items:center;gap:6px;margin-top:8px;padding:7px 9px 9px;border-top:1px dashed var(--k15);cursor:default}
+.scard .sowner span{font-size:11px;font-weight:700;color:var(--k45);flex:none}
+.scard .sowner input{flex:1;min-width:0;font-size:12.5px;padding:3px 0;border-bottom:1.5px solid transparent;cursor:text}
+.scard .sowner input:hover{border-bottom-color:var(--k15)}
+.scard .sowner input:focus{border-bottom-color:var(--b)}
 .pill{height:22px;padding:0 10px;border-radius:99px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;border:1.5px solid var(--k15);color:var(--k45)}
 .pill.s-go{background:var(--b);border-color:var(--b);color:var(--w)}
 .pill.s-hold{background:var(--o);border-color:var(--o);color:var(--w)}
@@ -276,6 +292,8 @@ input::placeholder,textarea::placeholder{color:var(--k45)}
   .hd{padding:24px 0 18px}
   .hd-r{width:100%}
   .hd-r .btn{flex:1}
+  .boardtab{height:34px}
+  .boardtab a{padding:0 12px;font-size:13px}
   .save{width:100%}
   .stat{padding:14px 12px}
   .stat .n{font-size:26px}
@@ -293,7 +311,10 @@ input::placeholder,textarea::placeholder{color:var(--k45)}
   <div class="wrap hd">
     <div>
       <div class="eyebrow">SEASON 27 · SPRING / SUMMER</div>
-      <h1>27SS <em>진행보드</em></h1>
+      <div class="titlerow">
+        <h1>27SS <em>진행보드</em></h1>
+        <nav class="boardtab" aria-label="보드 선택"><a href="./" data-b="ref">레퍼런스</a><a href="./?board=sample" data-b="sample">샘플보드</a></nav>
+      </div>
     </div>
     <div class="hd-r">
       <span class="save" id="save"><i></i><span>불러오는 중…</span></span>
@@ -395,6 +416,10 @@ const TYPES  = ['제작','사입'];
 const REF_CAT_MAP = {'티셔츠':'상의','탑':'상의','블라우스':'상의','긴팔셔츠':'셔츠','반팔셔츠':'셔츠','셔츠':'셔츠','스커트':'스커트','니트':'니트','팬츠':'팬츠','아우터':'아우터'};
 const LS_KEY = 'ss27-progress-board';
 const REMOTE = !!(SB_URL && SB_KEY);
+// 이 페이지가 보여줄 보드: 기본은 레퍼런스, 주소에 ?board=sample 이면 샘플보드
+// 아이템은 같은 표에 저장하고 data.board 값('sample')으로 구분 (없으면 레퍼런스)
+const BOARD = new URLSearchParams(location.search).get('board') === 'sample' ? 'sample' : 'ref';
+const boardTag = () => BOARD === 'sample' ? {board: 'sample'} : {};
 
 let state = {items:{}};
 const fresh = new Set();
@@ -626,7 +651,7 @@ async function quickAdd(fileList){
     const id = uid() + n;
     try{
       const ph = await uploadPhoto(f, id);
-      newItems.push({id, name:nameFromFile(f), ...ph, link:'', owner:'', color:'', type:'', cats:[], status:'', progress:'',
+      newItems.push({id, ...boardTag(), name:nameFromFile(f), ...ph, link:'', owner:'', color:'', type:'', cats:[], status:'', progress:'',
         createdAt:now + n, updatedAt:now + n});
     }catch(e){ console.error(e); fail++; }
     toast(`사진 올리는 중… ${++done}/${files.length}`, 120000);
@@ -647,7 +672,7 @@ async function quickAdd(fileList){
 function editing(){ const a = document.activeElement; return !!a && /INPUT|TEXTAREA/.test(a.tagName) && ($('#grid').contains(a) || $('#cmBody').contains(a)); }
 function softRender(){ if(!editing()) render(); }
 
-function list(){ return Object.values(state.items).map(it => ({cats:[], ...it})); }
+function list(){ return Object.values(state.items).filter(it => (it.board || 'ref') === BOARD).map(it => ({cats:[], ...it})); }
 
 function render(){ renderStats(); renderFilters(); renderGrid(); }
 
@@ -680,9 +705,9 @@ function renderFilters(){
       <option value="name" ${ui.sort==='name'?'selected':''}>이름순</option>
       <option value="status" ${ui.sort==='status'?'selected':''}>상태순</option>
     </select>
-    <div class="viewtog" role="group" aria-label="보기 방식">
+    ${BOARD === 'sample' ? '' : `<div class="viewtog" role="group" aria-label="보기 방식">
       <button type="button" data-view="detail" class="${ui.view==='detail'?'on':''}">자세히보기</button><button type="button" data-view="brief" class="${ui.view==='brief'?'on':''}">간략히보기</button>
-    </div>
+    </div>`}
     <button type="button" class="lbstart" data-lbstart title="지금 보이는 순서대로 사진만 크게 넘겨보기">⛶ 사진 크게보기</button>`;
 }
 
@@ -744,6 +769,18 @@ function briefHTML(it){
   </article>`;
 }
 
+/* 샘플보드 카드: 제품명 · 사진 · 담당자 입력 (카드를 누르면 상세 창) */
+function sampleHTML(it){
+  const st = it.status || 'none';
+  const src = imgOf(it);
+  return `<article class="bcard scard st-${st} ${fresh.has(it.id)?'fresh':''}" data-id="${esc(it.id)}" tabindex="0" title="눌러서 상세 정보 입력">
+    <div class="bar"></div>
+    <div class="bname ${it.name?'':'none'}">${esc(it.name || '제품명 없음')}</div>
+    <div class="bthumb">${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()"><button type="button" class="zmb" data-act="zoom" title="사진 크게 보기">⛶ 크게</button>` : '사진 없음'}</div>
+    <label class="sowner"><span>담당자</span><input data-f="owner" value="${esc(it.owner)}" placeholder="이름 입력"></label>
+  </article>`;
+}
+
 /* 아이템 상세 창 */
 let openId = null;
 function openCard(id){ if(!state.items[id]) return; openId = id; renderCardModal(true); openOv('#ovCard'); }
@@ -780,14 +817,15 @@ function renderGrid(){
                  .sort((a, b) => a.k - b.k).map(x => x.it);
   }
   frozenOrder = items.map(it => it.id);
-  $('#grid').classList.toggle('brief', ui.view === 'brief');
+  $('#grid').classList.toggle('brief', BOARD === 'sample' || ui.view === 'brief');
   renderCardModal();
-  const total = Object.keys(state.items).length;
+  const total = list().length;
   if(!total){
+    if(BOARD === 'sample'){ $('#grid').innerHTML = `<div class="empty"><h3>아직 등록된 샘플이 없어요</h3><p>디자이너가 진행한 아이템 사진을 이 화면에 끌어다 놓거나, 아래 버튼으로 올려 주세요.</p><button class="btn pri" data-open="new">+ 새 아이템</button><button class="btn olv" data-open="quick">빠른등록</button></div>`; return; }
     $('#grid').innerHTML = `<div class="empty"><h3>아직 등록된 아이템이 없어요</h3><p>사진을 이 화면에 끌어다 놓거나, 아래 버튼으로 등록해 보세요.</p><button class="btn" data-open="ref">레퍼런스 보드에서 가져오기</button><button class="btn pri" data-open="new">+ 새 아이템</button><button class="btn olv" data-open="quick">빠른등록</button></div>`;
     return;
   }
-  $('#grid').innerHTML = items.length ? items.map(ui.view === 'brief' ? briefHTML : cardHTML).join('') : `<div class="empty"><h3>조건에 맞는 아이템이 없어요</h3><p>필터를 바꾸거나 검색어를 지워보세요.</p></div>`;
+  $('#grid').innerHTML = items.length ? items.map(BOARD === 'sample' ? sampleHTML : ui.view === 'brief' ? briefHTML : cardHTML).join('') : `<div class="empty"><h3>조건에 맞는 아이템이 없어요</h3><p>필터를 바꾸거나 검색어를 지워보세요.</p></div>`;
 }
 
 /* ===== events: stats / filters ===== */
@@ -823,12 +861,13 @@ $('#filters').addEventListener('change', e => { if(e.target.id === 'sort'){ ui.s
 $('#grid').addEventListener('click', e => {
   const o = e.target.closest('[data-open]'); if(o){ const w = o.dataset.open; w === 'ref' ? openRef() : w === 'quick' ? $('#quickInput').click() : openNew(); return; }
   const zb = e.target.closest('.bcard [data-act="zoom"]'); if(zb){ openLightbox(zb.closest('.bcard').dataset.id); return; }
+  if(e.target.closest('.sowner')) return;   // 샘플 카드의 담당자 칸은 클릭해도 상세 창을 열지 않음
   const bc = e.target.closest('.bcard'); if(bc){ openCard(bc.dataset.id); return; }
   cardAction(e);
 });
 $('#grid').addEventListener('keydown', e => {
   const bc = e.target.closest('.bcard');
-  if(bc && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openCard(bc.dataset.id); }
+  if(bc && !/INPUT|TEXTAREA/.test(e.target.tagName) && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openCard(bc.dataset.id); }
 });
 $('#cmBody').addEventListener('click', cardAction);
 document.querySelectorAll('#ovCard [data-nav]').forEach(b => b.addEventListener('click', () => navCard(Number(b.dataset.nav))));
@@ -858,7 +897,7 @@ function cardAction(e){
 }
 const timers = {};
 function flushField(el){
-  const card = el.closest('.card'); if(!card) return;
+  const card = el.closest('[data-id]'); if(!card) return;
   const id = card.dataset.id, f = el.dataset.f, key = id + f;
   clearTimeout(timers[key]); delete timers[key];
   if(state.items[id] && (state.items[id][f] || '') !== el.value) patch(id, {[f]: el.value});
@@ -866,7 +905,7 @@ function flushField(el){
 ['#grid', '#cmBody'].forEach(sel => {
   $(sel).addEventListener('input', e => {
     const el = e.target; if(!el.dataset.f) return;
-    const key = el.closest('.card').dataset.id + el.dataset.f;
+    const key = el.closest('[data-id]').dataset.id + el.dataset.f;
     clearTimeout(timers[key]);
     setSave('saving');
     timers[key] = setTimeout(() => flushField(el), 900);
@@ -951,7 +990,7 @@ $('#formNew').addEventListener('submit', async e => {
   const f = new FormData(e.target);
   const now = Date.now(), id = uid();
   const item = {id, name:f.get('name').trim(), owner:f.get('owner').trim(), color:f.get('color').trim(), image:cleanUrl(f.get('image')), link:cleanUrl(f.get('link')),
-    type:pick.type, cats:[...pick.cats], status:'', progress:'', createdAt:now, updatedAt:now};
+    type:pick.type, cats:[...pick.cats], status:'', progress:'', createdAt:now, updatedAt:now, ...boardTag()};
   if(!item.name) return;
   const file = pick.file;
   closeOv($('#ovNew'));
@@ -1122,6 +1161,11 @@ function seed(){
   return {items};
 }
 (async function init(){
+  document.querySelectorAll('.boardtab a').forEach(a => a.classList.toggle('on', a.dataset.b === BOARD));
+  if(BOARD === 'sample'){
+    document.title = '27SS 샘플보드';
+    $('#openRef').hidden = true;
+  }
   setSave('load');
   if(!REMOTE) $('#notice').hidden = false;
   try{
